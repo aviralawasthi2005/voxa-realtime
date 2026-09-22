@@ -21,7 +21,11 @@ export const connectDB = async () => {
     }
 
     console.log('[MongoDB] Initializing embedded MongoDB engine...');
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryServer.create({
+      spawn: {
+        timeout: 60000,
+      },
+    });
     const uri = mongod.getUri();
     const conn = await mongoose.connect(uri);
     console.log(`[MongoDB] Embedded engine connected: ${conn.connection.host}`);
