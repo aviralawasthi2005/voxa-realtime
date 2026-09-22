@@ -24,6 +24,7 @@ export const seedDatabase = async () => {
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
         bio: 'Staff Product Designer exploring editorial typography & spatial communication.',
         status: 'online',
+        isVerified: true,
         preferences: { theme: 'dark', notifications: true, sound: true },
       },
       {
@@ -34,6 +35,7 @@ export const seedDatabase = async () => {
         avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
         bio: 'Distributed Systems & Real-time protocol engineer.',
         status: 'online',
+        isVerified: true,
         preferences: { theme: 'dark', notifications: true, sound: true },
       },
       {
@@ -44,6 +46,7 @@ export const seedDatabase = async () => {
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
         bio: 'Frontend Architect. Dedicated to eliminating web latency.',
         status: 'away',
+        isVerified: true,
         preferences: { theme: 'dark', notifications: true, sound: false },
       },
       {
@@ -54,6 +57,7 @@ export const seedDatabase = async () => {
         avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
         bio: 'Creative Technologist & Interface Craftsman.',
         status: 'offline',
+        isVerified: true,
         preferences: { theme: 'light', notifications: true, sound: true },
       },
     ];
