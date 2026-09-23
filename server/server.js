@@ -1,6 +1,7 @@
 import express from 'express';
 import http from 'http';
 import path from 'path';
+import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -60,8 +61,11 @@ app.use('/uploads', express.static(uploadsPath));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
+  const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  const dbState = states[mongoose.connection.readyState] || 'unknown';
+  res.status(dbState === 'connected' ? 200 : 503).json({
     status: 'online',
+    dbStatus: dbState,
     platform: 'VOXA Real-Time Communication Platform',
     timestamp: new Date().toISOString(),
   });
