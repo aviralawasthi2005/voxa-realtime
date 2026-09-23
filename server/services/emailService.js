@@ -19,23 +19,12 @@ const initTransporter = async () => {
     });
     console.log('[Email Service] Configured with custom SMTP host:', SMTP_HOST);
   } else {
-    // In development without explicit SMTP, use an ethereal test account or console fallback
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransporter({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      console.log('[Email Service] Initialized dev test mailer with Ethereal.');
-    } catch (e) {
-      console.warn('[Email Service] Ethereal initialization failed, using console fallback:', e.message);
-      transporter = null;
-    }
+    // In development without explicit SMTP, use local stream transport (instant, zero-network latency)
+    transporter = nodemailer.createTransporter({
+      streamTransport: true,
+      newline: 'windows',
+    });
+    console.log('[Email Service] Initialized dev mailer with local console stream.');
   }
 
   return transporter;

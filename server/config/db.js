@@ -22,6 +22,9 @@ export const connectDB = async () => {
 
     console.log('[MongoDB] Initializing embedded MongoDB engine...');
     mongod = await MongoMemoryServer.create({
+      instance: {
+        args: ['--quiet'],
+      },
       spawn: {
         timeout: 60000,
       },
