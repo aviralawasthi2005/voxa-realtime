@@ -6,6 +6,8 @@ server/node_modules/
 # Production build
 dist/
 client/dist/
+.vite/
+client/.vite/
 
 # Environment files (keep .env.example)
 .env

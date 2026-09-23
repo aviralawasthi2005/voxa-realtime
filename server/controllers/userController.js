@@ -76,11 +76,31 @@ export const getUserById = async (req, res, next) => {
 // @access  Private
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name, bio, avatar, status, preferences } = req.body;
+    const { name, username, bio, avatar, status, preferences } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    if (username) {
+      const cleanUsername = username.trim().toLowerCase();
+      if (!/^[a-zA-Z0-9_]{3,30}$/.test(cleanUsername)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Username must be 3-30 characters long and contain only letters, numbers, and underscores.',
+        });
+      }
+      if (cleanUsername !== user.username) {
+        const existing = await User.findOne({ username: cleanUsername });
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: 'Username is already taken. Please choose another.',
+          });
+        }
+        user.username = cleanUsername;
+      }
     }
 
     if (name) user.name = name.trim();

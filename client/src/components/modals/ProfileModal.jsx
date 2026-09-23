@@ -8,6 +8,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
   const { user, updateProfile } = useAuthStore();
 
   const [name, setName] = useState(user?.name || '');
+  const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [status, setStatus] = useState(user?.status || 'online');
   const [isUploading, setIsUploading] = useState(false);
@@ -16,6 +17,15 @@ export const ProfileModal = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState('');
 
   const fileInputRef = useRef(null);
+
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setUsername(user.username || '');
+      setBio(user.bio || '');
+      setStatus(user.status || 'online');
+    }
+  }, [user, isOpen]);
 
   if (!isOpen || !user) return null;
 
@@ -47,7 +57,12 @@ export const ProfileModal = ({ isOpen, onClose }) => {
     setErrorMessage('');
 
     try {
-      const res = await updateProfile({ name: name.trim(), bio: bio.trim(), status });
+      const res = await updateProfile({
+        name: name.trim(),
+        username: username.trim(),
+        bio: bio.trim(),
+        status,
+      });
       if (res.success) {
         setSuccessMessage('Profile saved.');
         setTimeout(() => onClose(), 800);
@@ -55,7 +70,7 @@ export const ProfileModal = ({ isOpen, onClose }) => {
         setErrorMessage(res.message);
       }
     } catch (err) {
-      setErrorMessage('Failed to save profile changes.');
+      setErrorMessage(err.response?.data?.message || 'Failed to save profile changes.');
     } finally {
       setIsSubmitting(false);
     }
@@ -137,6 +152,30 @@ export const ProfileModal = ({ isOpen, onClose }) => {
               className="w-full px-3 py-2 text-xs bg-surface-light-subtle dark:bg-surface-dark-subtle border border-surface-light-border dark:border-surface-dark-border rounded focus-ring text-surface-light-text dark:text-surface-dark-text"
               required
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold font-display text-surface-light-text dark:text-surface-dark-text mb-1">
+              Username Handle
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-surface-light-textSubtle dark:text-surface-dark-textSubtle select-none">
+                @
+              </span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                className="w-full pl-7 pr-3 py-2 text-xs font-mono bg-surface-light-subtle dark:bg-surface-dark-subtle border border-surface-light-border dark:border-surface-dark-border rounded focus-ring text-surface-light-text dark:text-surface-dark-text"
+                placeholder="username"
+                minLength={3}
+                maxLength={30}
+                required
+              />
+            </div>
+            <p className="text-[10px] text-surface-light-textSubtle dark:text-surface-dark-textSubtle mt-1">
+              3-30 characters: letters, numbers, and underscores. Used for @mentions and search.
+            </p>
           </div>
 
           <div>
