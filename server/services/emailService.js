@@ -12,21 +12,44 @@ const getFromAddress = () => {
   return '"VOXA Security" <no-reply@voxa.local>';
 };
 
+const isPlaceholder = (val) => {
+  if (!val) return true;
+  const str = String(val).trim().toLowerCase();
+  return (
+    str.includes('your_') ||
+    str.includes('yourdomain.com') ||
+    str.includes('example.com') ||
+    str === 'your_email@gmail.com' ||
+    str === 'your_smtp_username' ||
+    str === 'your_smtp_password' ||
+    str === 'your_16_digit_google_app_password'
+  );
+};
+
 const initTransporter = async () => {
   if (transporter) return transporter;
 
   const { SMTP_SERVICE, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
 
-  if (SMTP_SERVICE && SMTP_USER && SMTP_PASS) {
+  const hasRealUserPass =
+    SMTP_USER &&
+    SMTP_PASS &&
+    !isPlaceholder(SMTP_USER) &&
+    !isPlaceholder(SMTP_PASS);
+
+  if (SMTP_SERVICE && hasRealUserPass) {
     transporter = nodemailer.createTransport({
       service: SMTP_SERVICE.trim().toLowerCase(),
       auth: {
         user: SMTP_USER.trim(),
         pass: SMTP_PASS.trim(),
       },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
     });
     console.log(`[Email Service] Configured with ${SMTP_SERVICE} service (${SMTP_USER})`);
-  } else if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  } else if (SMTP_HOST && hasRealUserPass) {
     const isSecure = SMTP_SECURE === 'true' || Number(SMTP_PORT) === 465;
     transporter = nodemailer.createTransport({
       host: SMTP_HOST.trim(),
@@ -36,18 +59,21 @@ const initTransporter = async () => {
         user: SMTP_USER.trim(),
         pass: SMTP_PASS.trim(),
       },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
       tls: {
         rejectUnauthorized: false,
       },
     });
     console.log(`[Email Service] Configured with custom SMTP host: ${SMTP_HOST}:${SMTP_PORT || 587}`);
   } else {
-    // In development without explicit SMTP, use local stream transport
+    // In development without real SMTP credentials, use local stream transport
     transporter = nodemailer.createTransport({
       streamTransport: true,
       newline: 'windows',
     });
-    console.log('[Email Service] Running in dev mode with console delivery (set SMTP_USER & SMTP_PASS in server/.env for real email).');
+    console.log('[Email Service] Running with console delivery. To send real emails, set your real SMTP_USER and SMTP_PASS in server/.env.');
   }
 
   return transporter;

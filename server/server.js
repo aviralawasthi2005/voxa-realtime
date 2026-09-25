@@ -76,11 +76,15 @@ app.use(async (req, res, next) => {
   if (req.path === '/api/health') return next();
   if (mongoose.connection.readyState !== 1) {
     try {
+      console.log(`[DB Middleware] Connection state is ${mongoose.connection.readyState}. Attempting connectDB()...`);
       await connectDB();
+      console.log('[DB Middleware] connectDB() succeeded.');
     } catch (err) {
+      console.error('[DB Middleware] connectDB() failed:', err.message);
       return res.status(503).json({
         success: false,
         message: 'Database is initializing. Please retry in a moment.',
+        error: err.message,
       });
     }
   }

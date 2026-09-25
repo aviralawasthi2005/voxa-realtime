@@ -220,8 +220,8 @@ export const resendOtp = async (req, res, next) => {
 // @access  Public
 export const login = async (req, res, next) => {
   try {
-    const { loginOrEmail, email, password } = req.body;
-    const identifier = (loginOrEmail || email || '').trim().toLowerCase();
+    const { loginOrEmail, email, identifier: rawId, username, password } = req.body;
+    const identifier = (loginOrEmail || email || rawId || username || '').trim().toLowerCase();
 
     if (!identifier || !password) {
       return res.status(400).json({
