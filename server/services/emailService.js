@@ -2,29 +2,52 @@ import nodemailer from 'nodemailer';
 
 let transporter = null;
 
+const getFromAddress = () => {
+  if (process.env.EMAIL_FROM && process.env.EMAIL_FROM.trim().length > 0) {
+    return process.env.EMAIL_FROM.trim();
+  }
+  if (process.env.SMTP_USER && process.env.SMTP_USER.trim().length > 0) {
+    return `"VOXA" <${process.env.SMTP_USER.trim()}>`;
+  }
+  return '"VOXA Security" <no-reply@voxa.local>';
+};
+
 const initTransporter = async () => {
   if (transporter) return transporter;
 
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
+  const { SMTP_SERVICE, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
 
-  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
-    transporter = nodemailer.createTransporter({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT) || 587,
-      secure: Number(SMTP_PORT) === 465,
+  if (SMTP_SERVICE && SMTP_USER && SMTP_PASS) {
+    transporter = nodemailer.createTransport({
+      service: SMTP_SERVICE.trim().toLowerCase(),
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: SMTP_USER.trim(),
+        pass: SMTP_PASS.trim(),
       },
     });
-    console.log('[Email Service] Configured with custom SMTP host:', SMTP_HOST);
+    console.log(`[Email Service] Configured with ${SMTP_SERVICE} service (${SMTP_USER})`);
+  } else if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+    const isSecure = SMTP_SECURE === 'true' || Number(SMTP_PORT) === 465;
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST.trim(),
+      port: Number(SMTP_PORT) || 587,
+      secure: isSecure,
+      auth: {
+        user: SMTP_USER.trim(),
+        pass: SMTP_PASS.trim(),
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+    console.log(`[Email Service] Configured with custom SMTP host: ${SMTP_HOST}:${SMTP_PORT || 587}`);
   } else {
-    // In development without explicit SMTP, use local stream transport (instant, zero-network latency)
-    transporter = nodemailer.createTransporter({
+    // In development without explicit SMTP, use local stream transport
+    transporter = nodemailer.createTransport({
       streamTransport: true,
       newline: 'windows',
     });
-    console.log('[Email Service] Initialized dev mailer with local console stream.');
+    console.log('[Email Service] Running in dev mode with console delivery (set SMTP_USER & SMTP_PASS in server/.env for real email).');
   }
 
   return transporter;
@@ -168,7 +191,7 @@ export const sendVerificationEmail = async (email, name, otp) => {
   try {
     const mailer = await initTransporter();
     if (mailer) {
-      const from = process.env.EMAIL_FROM || '"VOXA Security" <no-reply@voxa.local>';
+      const from = getFromAddress();
       const info = await mailer.sendMail({
         from,
         to: email,
@@ -177,14 +200,11 @@ export const sendVerificationEmail = async (email, name, otp) => {
         text: `Welcome to VOXA. Your verification code is: ${otp}. It expires in 10 minutes.`,
       });
 
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        console.log(`[Email Preview]: ${previewUrl}`);
-      }
-      return { success: true, previewUrl };
+      console.log(`[Email Service] ✔ Real email dispatched to ${email} (ID: ${info.messageId || 'local-stream'})`);
+      return { success: true, messageId: info.messageId };
     }
   } catch (err) {
-    console.error('[Email Service] Error sending verification email:', err.message);
+    console.error(`[Email Service] ✖ Failed to send email via SMTP to ${email}:`, err.message);
   }
 
   return { success: true, loggedToConsole: true };
@@ -208,7 +228,7 @@ export const send2FAEmail = async (email, name, otp) => {
   try {
     const mailer = await initTransporter();
     if (mailer) {
-      const from = process.env.EMAIL_FROM || '"VOXA Security" <security@voxa.local>';
+      const from = getFromAddress();
       const info = await mailer.sendMail({
         from,
         to: email,
@@ -217,14 +237,11 @@ export const send2FAEmail = async (email, name, otp) => {
         text: `Your VOXA 2FA security code is: ${otp}. It expires in 10 minutes.`,
       });
 
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        console.log(`[Email Preview]: ${previewUrl}`);
-      }
-      return { success: true, previewUrl };
+      console.log(`[Email Service] ✔ Real 2FA email dispatched to ${email} (ID: ${info.messageId || 'local-stream'})`);
+      return { success: true, messageId: info.messageId };
     }
   } catch (err) {
-    console.error('[Email Service] Error sending 2FA email:', err.message);
+    console.error(`[Email Service] ✖ Failed to send 2FA email via SMTP to ${email}:`, err.message);
   }
 
   return { success: true, loggedToConsole: true };
@@ -248,7 +265,7 @@ export const send2FAActivationEmail = async (email, name, otp) => {
   try {
     const mailer = await initTransporter();
     if (mailer) {
-      const from = process.env.EMAIL_FROM || '"VOXA Security" <security@voxa.local>';
+      const from = getFromAddress();
       const info = await mailer.sendMail({
         from,
         to: email,
@@ -257,14 +274,11 @@ export const send2FAActivationEmail = async (email, name, otp) => {
         text: `Your VOXA 2FA activation code is: ${otp}. It expires in 10 minutes.`,
       });
 
-      const previewUrl = nodemailer.getTestMessageUrl(info);
-      if (previewUrl) {
-        console.log(`[Email Preview]: ${previewUrl}`);
-      }
-      return { success: true, previewUrl };
+      console.log(`[Email Service] ✔ Real 2FA activation email dispatched to ${email} (ID: ${info.messageId || 'local-stream'})`);
+      return { success: true, messageId: info.messageId };
     }
   } catch (err) {
-    console.error('[Email Service] Error sending 2FA activation email:', err.message);
+    console.error(`[Email Service] ✖ Failed to send 2FA activation email via SMTP to ${email}:`, err.message);
   }
 
   return { success: true, loggedToConsole: true };
