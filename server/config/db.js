@@ -30,7 +30,14 @@ export const connectDB = async () => {
         }
       }
 
-      if (!mongod) {
+      if (!mongod || mongod.state !== 'running') {
+        if (mongod) {
+          try {
+            await mongod.stop();
+          } catch (e) {
+            // ignore
+          }
+        }
         console.log('[MongoDB] Initializing embedded MongoDB engine...');
         mongod = await MongoMemoryServer.create({
           instance: {
@@ -51,6 +58,13 @@ export const connectDB = async () => {
       console.log(`[MongoDB] Embedded engine connected: ${conn.connection.host}`);
     } catch (error) {
       console.error(`[MongoDB] Connection error: ${error.message}`);
+      if (mongod) {
+        try {
+          await mongod.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
       mongod = null;
       global.__MONGO_INSTANCE = null;
       throw error;
