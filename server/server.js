@@ -71,6 +71,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Ensure Database Connection Middleware
+app.use(async (req, res, next) => {
+  if (req.path === '/api/health') return next();
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+    } catch (err) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database is initializing. Please retry in a moment.',
+      });
+    }
+  }
+  next();
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -94,8 +110,8 @@ const startServer = async () => {
     // Initialize real-time socket events
     initSocket(io);
 
-    server.listen(PORT, () => {
-      console.log(`[VOXA Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`[VOXA Server] Running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error(`[VOXA Server] Startup failed: ${error.message}`);
