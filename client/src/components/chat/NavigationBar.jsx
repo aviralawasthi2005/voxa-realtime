@@ -11,7 +11,9 @@ import {
   Sun,
   Moon,
   LogOut,
+  Sparkles,
 } from 'lucide-react';
+import { useChatStore } from '../../store/useChatStore';
 
 export const NavigationBar = ({
   onOpenSearch,
@@ -21,7 +23,14 @@ export const NavigationBar = ({
 }) => {
   const { user, logout } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
+  const openAiChat = useChatStore((state) => state.openAiChat);
+  const activeConversation = useChatStore((state) => state.activeConversation);
   const unreadNotifications = useNotificationStore((state) => state.unreadCount);
+
+  const isAiActive =
+    activeConversation &&
+    !activeConversation.isGroup &&
+    activeConversation.participants?.some((p) => p.isBot || p.username === 'voxa_ai');
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -38,10 +47,31 @@ export const NavigationBar = ({
         {/* Primary nav buttons */}
         <div className="flex flex-col items-center gap-2">
           <button
-            className="p-2.5 rounded text-brand-500 bg-brand-500/10 transition-colors"
+            className={`p-2.5 rounded transition-colors ${
+              !isAiActive
+                ? 'text-brand-500 bg-brand-500/10'
+                : 'text-surface-light-textSubtle dark:text-surface-dark-textSubtle hover:text-surface-light-text dark:hover:text-surface-dark-text hover:bg-surface-light-subtle dark:hover:bg-surface-dark-panel'
+            }`}
             title="Conversations"
           >
             <MessageSquare className="w-5 h-5" />
+          </button>
+
+          {/* VOXA AI Button */}
+          <button
+            onClick={() => openAiChat()}
+            className={`relative p-2.5 rounded transition-all group ${
+              isAiActive
+                ? 'text-purple-400 bg-purple-500/15 ring-1 ring-purple-500/40 shadow-sm'
+                : 'text-purple-400/80 hover:text-purple-300 hover:bg-purple-500/10'
+            }`}
+            title="VOXA AI Assistant"
+          >
+            <Sparkles className="w-5 h-5 transition-transform group-hover:scale-110" />
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
+            </span>
           </button>
 
           <button

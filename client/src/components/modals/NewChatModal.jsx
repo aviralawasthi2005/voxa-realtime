@@ -10,7 +10,7 @@ export const NewChatModal = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { createDirectChat, onlineUsers } = useChatStore();
+  const { createDirectChat, openAiChat, onlineUsers } = useChatStore();
 
   useEffect(() => {
     if (isOpen) {
@@ -31,10 +31,14 @@ export const NewChatModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSelectUser = async (userId) => {
+  const handleSelectUser = async (user) => {
     setIsSubmitting(true);
     try {
-      await createDirectChat(userId);
+      if (user.isBot || user.username === 'voxa_ai') {
+        await openAiChat();
+      } else {
+        await createDirectChat(user._id);
+      }
       onClose();
     } catch (err) {
       console.error(err);
@@ -97,14 +101,19 @@ export const NewChatModal = ({ isOpen, onClose }) => {
             </div>
           ) : (
             filteredUsers.map((user) => {
-              const isOnline = onlineUsers.has(user._id) || user.status === 'online';
+              const isAi = user.isBot || user.username === 'voxa_ai';
+              const isOnline = isAi ? true : (onlineUsers.has(user._id) || user.status === 'online');
 
               return (
                 <button
                   key={user._id}
                   disabled={isSubmitting}
-                  onClick={() => handleSelectUser(user._id)}
-                  className="w-full p-2.5 rounded hover:bg-surface-light-subtle dark:hover:bg-surface-dark-subtle flex items-center justify-between text-left transition-colors group"
+                  onClick={() => handleSelectUser(user)}
+                  className={`w-full p-2.5 rounded flex items-center justify-between text-left transition-all group ${
+                    isAi
+                      ? 'bg-purple-500/10 border border-purple-500/25 hover:bg-purple-500/15'
+                      : 'hover:bg-surface-light-subtle dark:hover:bg-surface-dark-subtle'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -115,8 +124,15 @@ export const NewChatModal = ({ isOpen, onClose }) => {
                       showStatus={true}
                     />
                     <div>
-                      <div className="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text">
-                        {user.name}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text">
+                          {user.name}
+                        </span>
+                        {isAi && (
+                          <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase font-bold tracking-wider">
+                            AI Bot
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-surface-light-textMuted dark:text-surface-dark-textMuted">
                         @{user.username}
@@ -124,8 +140,14 @@ export const NewChatModal = ({ isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  <span className="text-[11px] text-brand-500 opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-                    Chat
+                  <span
+                    className={`text-[11px] font-medium transition-opacity ${
+                      isAi
+                        ? 'text-purple-400 opacity-90'
+                        : 'text-brand-500 opacity-0 group-hover:opacity-100'
+                    }`}
+                  >
+                    {isAi ? 'Chat AI' : 'Chat'}
                   </span>
                 </button>
               );

@@ -27,6 +27,7 @@ export const ChatHeader = ({
   let subtitle = '';
   let avatarSrc = activeConversation.avatar;
   let isOnline = false;
+  let isAi = false;
 
   if (activeConversation.isGroup) {
     const memberCount = activeConversation.participants?.length || 0;
@@ -35,8 +36,13 @@ export const ChatHeader = ({
     const other = activeConversation.participants?.find((p) => p._id !== currentUser?._id);
     title = other?.name || 'Direct Chat';
     avatarSrc = other?.avatar;
-    isOnline = other ? onlineUsers.has(other._id) || other.status === 'online' : false;
-    subtitle = isOnline ? 'Active now' : other?.bio || 'Offline';
+    isAi = other?.isBot || other?.username === 'voxa_ai';
+    isOnline = isAi ? true : (other ? onlineUsers.has(other._id) || other.status === 'online' : false);
+    subtitle = isAi
+      ? 'Always Active · Intelligent Co-Pilot'
+      : isOnline
+      ? 'Active now'
+      : other?.bio || 'Offline';
   }
 
   // Active typing indicators for this conversation
@@ -65,9 +71,16 @@ export const ChatHeader = ({
         />
 
         <div className="min-w-0">
-          <h2 className="text-xs sm:text-sm font-semibold font-display text-surface-light-text dark:text-surface-dark-text truncate">
-            {title}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-semibold font-display text-surface-light-text dark:text-surface-dark-text truncate">
+              {title}
+            </h2>
+            {isAi && (
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase font-bold tracking-wider flex-shrink-0">
+                AI Assistant
+              </span>
+            )}
+          </div>
 
           {/* Typing state or presence subtitle */}
           {typers.length > 0 ? (
