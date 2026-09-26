@@ -15,7 +15,7 @@ export const searchUsers = async (req, res, next) => {
       _id: { $ne: req.user._id },
       $or: [{ name: regex }, { username: regex }, { email: regex }],
     })
-      .select('name username email avatar bio status lastSeen')
+      .select('name username email avatar bio status lastSeen isBot')
       .limit(20);
 
     res.status(200).json({
@@ -33,8 +33,8 @@ export const searchUsers = async (req, res, next) => {
 export const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({ _id: { $ne: req.user._id } })
-      .select('name username email avatar bio status lastSeen')
-      .sort({ name: 1 })
+      .select('name username email avatar bio status lastSeen isBot')
+      .sort({ isBot: -1, name: 1 })
       .limit(50);
 
     res.status(200).json({

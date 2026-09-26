@@ -1,6 +1,7 @@
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
+import { getOrCreateAiUser } from '../services/aiService.js';
 
 // @desc    Get all conversations for the authenticated user
 // @route   GET /api/conversations
@@ -115,6 +116,71 @@ export const createDirectConversation = async (req, res, next) => {
         'participants',
         'name username email avatar status lastSeen bio'
       );
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { conversation },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get or create 1-on-1 conversation with VOXA AI Bot
+// @route   POST /api/conversations/ai
+// @access  Private
+export const getOrCreateAiConversation = async (req, res, next) => {
+  try {
+    const aiUser = await getOrCreateAiUser();
+    if (!aiUser) {
+      return res.status(500).json({
+        success: false,
+        message: 'Could not initialize AI Bot.',
+      });
+    }
+
+    let conversation = await Conversation.findOne({
+      isGroup: false,
+      participants: { $all: [req.user._id, aiUser._id], $size: 2 },
+    })
+      .populate('participants', 'name username email avatar status lastSeen bio isBot')
+      .populate({
+        path: 'lastMessage',
+        populate: { path: 'sender', select: 'name username avatar isBot' },
+      });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        isGroup: false,
+        participants: [req.user._id, aiUser._id],
+        unreadCounts: {
+          [req.user._id.toString()]: 0,
+          [aiUser._id.toString()]: 0,
+        },
+      });
+
+      // Send initial welcome message from VOXA AI
+      const firstName = req.user?.name ? req.user.name.split(' ')[0] : 'there';
+      const welcomeMsg = await Message.create({
+        conversation: conversation._id,
+        sender: aiUser._id,
+        content: `Hello ${firstName}! 👋 I am **VOXA AI**, your built-in intelligent co-pilot.\n\nAsk me anything from coding and debugging to drafting messages or brainstorming ideas. You can also mention \`@ai\` in any group chat to invite me to the discussion!\n\nHow can I help you today?`,
+        messageType: 'text',
+        status: 'sent',
+        deliveredTo: [aiUser._id],
+        readBy: [{ user: aiUser._id, readAt: new Date() }],
+      });
+
+      conversation.lastMessage = welcomeMsg._id;
+      await conversation.save();
+
+      conversation = await Conversation.findById(conversation._id)
+        .populate('participants', 'name username email avatar status lastSeen bio isBot')
+        .populate({
+          path: 'lastMessage',
+          populate: { path: 'sender', select: 'name username avatar isBot' },
+        });
     }
 
     res.status(200).json({

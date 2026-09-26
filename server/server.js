@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import { initSocket } from './sockets/socketHandler.js';
 import { seedDatabase } from './utils/seed.js';
+import { getOrCreateAiUser } from './services/aiService.js';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -37,6 +38,8 @@ const io = new Server(server, {
   },
   pingTimeout: 60000,
 });
+
+app.set('io', io);
 
 // Middleware
 app.use(
@@ -110,6 +113,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await seedDatabase();
+    await getOrCreateAiUser();
 
     // Initialize real-time socket events
     initSocket(io);
