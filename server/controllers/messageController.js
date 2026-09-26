@@ -1,6 +1,7 @@
 import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
 import Notification from '../models/Notification.js';
+import { triggerAiReplyIfNeeded } from '../services/aiService.js';
 
 // @desc    Get paginated messages for a conversation
 // @route   GET /api/messages/:conversationId
@@ -31,10 +32,10 @@ export const getMessages = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('sender', 'name username avatar')
+      .populate('sender', 'name username avatar isBot')
       .populate({
         path: 'replyTo',
-        populate: { path: 'sender', select: 'name username' },
+        populate: { path: 'sender', select: 'name username isBot' },
       })
       .populate('reactions.user', 'name username avatar');
 
@@ -114,10 +115,10 @@ export const sendMessage = async (req, res, next) => {
     await conversation.save();
 
     message = await Message.findById(message._id)
-      .populate('sender', 'name username avatar')
+      .populate('sender', 'name username avatar isBot')
       .populate({
         path: 'replyTo',
-        populate: { path: 'sender', select: 'name username' },
+        populate: { path: 'sender', select: 'name username isBot' },
       });
 
     // Create notifications for other participants
@@ -137,6 +138,10 @@ export const sendMessage = async (req, res, next) => {
       })
     );
     await Promise.all(notifPromises);
+
+    // Trigger AI response asynchronously if in AI chat or @ai mention
+    const io = req.app?.get('io');
+    triggerAiReplyIfNeeded({ message, conversation, io });
 
     res.status(201).json({
       success: true,

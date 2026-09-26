@@ -93,6 +93,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    isBot: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

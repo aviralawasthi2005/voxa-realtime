@@ -3,6 +3,7 @@ import {
   getConversations,
   getConversationById,
   createDirectConversation,
+  getOrCreateAiConversation,
   createGroupConversation,
   updateGroup,
   addMembers,
@@ -16,6 +17,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/', getConversations);
+router.post('/ai', getOrCreateAiConversation);
 router.get('/:id', getConversationById);
 router.post('/direct', createDirectConversation);
 router.post('/group', createGroupConversation);
