@@ -202,6 +202,28 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  openAiChat: async () => {
+    try {
+      const res = await api.post('/conversations/ai');
+      const conv = res.data.data.conversation;
+
+      const exists = get().conversations.some((c) => c._id === conv._id);
+      if (!exists) {
+        set((state) => ({ conversations: [conv, ...state.conversations] }));
+      } else {
+        set((state) => ({
+          conversations: state.conversations.map((c) => (c._id === conv._id ? conv : c)),
+        }));
+      }
+
+      await get().selectConversation(conv);
+      return conv;
+    } catch (err) {
+      console.error('Failed to open VOXA AI chat:', err);
+      throw err;
+    }
+  },
+
   createGroupChat: async (name, description, participants, avatar) => {
     try {
       const res = await api.post('/conversations/group', {

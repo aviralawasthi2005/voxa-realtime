@@ -26,6 +26,7 @@ export const Sidebar = ({
     conversations,
     activeConversation,
     selectConversation,
+    openAiChat,
     onlineUsers,
     activeTab,
     setActiveTab,
@@ -132,6 +133,44 @@ export const Sidebar = ({
           />
         </div>
 
+        {/* VOXA AI Quick Launch Banner */}
+        <div
+          onClick={() => {
+            openAiChat();
+            onCloseMobile();
+          }}
+          className="group relative cursor-pointer p-2 rounded-md border border-purple-500/25 bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-cyan-500/10 hover:border-purple-500/50 hover:from-purple-500/15 hover:to-cyan-500/15 transition-all shadow-sm"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 shadow-sm">
+                <img
+                  src="https://api.dicebear.com/7.x/bottts/svg?seed=VoxaAI&backgroundColor=7c3aed,06b6d4"
+                  alt="VOXA AI"
+                  className="w-full h-full rounded-full bg-surface-dark-subtle"
+                />
+              </div>
+              <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-surface-light-panel dark:ring-surface-dark-subtle" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-display font-semibold text-surface-light-text dark:text-surface-dark-text tracking-tight group-hover:text-purple-400 transition-colors">
+                  VOXA AI Assistant
+                </span>
+                <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase font-bold tracking-wider">
+                  Bot
+                </span>
+              </div>
+              <p className="text-[10px] text-surface-light-textMuted dark:text-surface-dark-textMuted truncate">
+                Instant code, insights & chat assistance
+              </p>
+            </div>
+
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all flex-shrink-0" />
+          </div>
+        </div>
+
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 p-0.5 bg-surface-light-subtle dark:bg-surface-dark-panel rounded border border-surface-light-border/60 dark:border-surface-dark-border/60 text-[11px] font-medium">
           <button
@@ -200,11 +239,14 @@ export const Sidebar = ({
             let avatarSrc = c.avatar;
             let isOnline = false;
 
+            let isAi = false;
+
             if (!c.isGroup) {
               const other = c.participants?.find((p) => p._id !== currentUser?._id);
               title = other?.name || 'Direct Chat';
               avatarSrc = other?.avatar;
-              isOnline = other ? onlineUsers.has(other._id) || other.status === 'online' : false;
+              isAi = other?.isBot || other?.username === 'voxa_ai';
+              isOnline = isAi ? true : (other ? onlineUsers.has(other._id) || other.status === 'online' : false);
             }
 
             const unreadCount = c.unreadCounts?.[currentUser?._id] || 0;
@@ -236,15 +278,16 @@ export const Sidebar = ({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <span
-                      className={`text-xs font-semibold truncate ${
-                        isSelected
-                          ? 'text-surface-light-text dark:text-surface-dark-text'
-                          : 'text-surface-light-text dark:text-surface-dark-text'
-                      }`}
-                    >
-                      {title}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0 truncate">
+                      <span className="text-xs font-semibold truncate text-surface-light-text dark:text-surface-dark-text">
+                        {title}
+                      </span>
+                      {isAi && (
+                        <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold uppercase flex-shrink-0">
+                          AI
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-surface-light-textSubtle dark:text-surface-dark-textSubtle font-mono flex-shrink-0">
                       {formatTimestamp(lastMsg?.createdAt || c.updatedAt)}
                     </span>

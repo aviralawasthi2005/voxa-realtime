@@ -227,7 +227,14 @@ export const MessageComposer = () => {
           value={content}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
-          placeholder="Write a message... (Enter to send, Shift+Enter for newline)"
+          placeholder={
+            !activeConversation?.isGroup &&
+            activeConversation?.participants?.some((p) => p.isBot || p.username === 'voxa_ai')
+              ? 'Ask VOXA AI anything... (Enter to send)'
+              : activeConversation?.isGroup
+              ? 'Write a message... (mention @ai for VOXA AI)'
+              : 'Write a message... (Enter to send, Shift+Enter for newline)'
+          }
           className="w-full bg-transparent text-xs sm:text-sm text-surface-light-text dark:text-surface-dark-text placeholder-surface-light-textSubtle dark:placeholder-surface-dark-textSubtle resize-none focus:outline-none max-h-36 py-1 leading-relaxed"
         />
 
