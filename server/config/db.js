@@ -35,8 +35,7 @@ export const connectDB = async () => {
           try {
             await mongod.stop();
           } catch (e) {
-            // ignore
-          }
+            // ignore--------
         }
         console.log('[MongoDB] Initializing embedded MongoDB engine...');
         mongod = await MongoMemoryServer.create({
