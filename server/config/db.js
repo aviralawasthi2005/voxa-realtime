@@ -3,6 +3,17 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let connectPromise = null;
 
+// Add connection event logging
+mongoose.connection.on('connected', () => {
+  console.log('[MongoDB] Mongoose event: connected');
+});
+mongoose.connection.on('disconnected', () => {
+  console.log('[MongoDB] Mongoose event: disconnected');
+});
+mongoose.connection.on('error', (err) => {
+  console.error('[MongoDB] Mongoose connection error:', err.message);
+});
+
 export const connectDB = async () => {
   if (mongoose.connection.readyState === 1) {
     return;
@@ -27,7 +38,8 @@ export const connectDB = async () => {
         try {
           console.log('[MongoDB] Connecting to external MongoDB URI...');
           const conn = await mongoose.connect(mongoUri, {
-            serverSelectionTimeoutMS: 4000,
+            serverSelectionTimeoutMS: 5000,
+            dbName: 'voxa',
           });
           console.log(`[MongoDB] Connected to external instance: ${conn.connection.host}`);
           return;
@@ -36,25 +48,40 @@ export const connectDB = async () => {
         }
       }
 
-      // Reuse existing global instance if available across hot reloads
+      // Check if global instance exists and is responsive
       let mongod = global.__MONGO_INSTANCE;
-      if (!mongod || mongod.state !== 'running') {
-        console.log('[MongoDB] Initializing embedded MongoDB engine...');
-        mongod = await MongoMemoryServer.create({
-          instance: {
-            args: ['--quiet'],
-          },
-          spawn: {
-            stdio: 'ignore',
-            timeout: 60000,
-          },
-        });
-        global.__MONGO_INSTANCE = mongod;
+      if (mongod) {
+        try {
+          const uri = mongod.getUri();
+          const conn = await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 3000,
+            dbName: 'voxa',
+          });
+          console.log(`[MongoDB] Reconnected to existing embedded engine: ${conn.connection.host}`);
+          return;
+        } catch (err) {
+          console.log('[MongoDB] Existing embedded engine was stale. Recreating...');
+          try {
+            await mongod.stop();
+          } catch (e) {}
+          global.__MONGO_INSTANCE = null;
+          mongod = null;
+        }
       }
+
+      console.log('[MongoDB] Initializing embedded MongoDB engine...');
+      mongod = await MongoMemoryServer.create({
+        instance: {
+          dbName: 'voxa',
+          args: ['--quiet'],
+        },
+      });
+      global.__MONGO_INSTANCE = mongod;
 
       const uri = mongod.getUri();
       const conn = await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 10000,
+        dbName: 'voxa',
       });
       console.log(`[MongoDB] Embedded engine connected: ${conn.connection.host}`);
     } catch (error) {
