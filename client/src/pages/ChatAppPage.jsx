@@ -36,6 +36,7 @@ export const ChatAppPage = () => {
     setUserTyping,
     removeUserTyping,
     setConnectionStatus,
+    openAiChat,
   } = useChatStore();
 
   const { addToast } = useNotificationStore();
@@ -168,29 +169,45 @@ export const ChatAppPage = () => {
               <MessageComposer />
             </>
           ) : (
-            /* Empty State for when no conversation is selected on desktop */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none">
-              <div className="w-14 h-14 rounded-full bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border flex items-center justify-center text-brand-500 mb-4 shadow-fine">
-                <MessageSquare className="w-6 h-6" />
+            /* Elevated Empty State for when no conversation is selected on desktop */
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center select-none animate-in fade-in">
+              <div className="relative mb-5">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 via-amber-600 to-purple-600 p-[2px] shadow-lg shadow-brand-500/10">
+                  <div className="w-full h-full rounded-2xl bg-surface-light-panel dark:bg-[#111318] flex items-center justify-center text-brand-500">
+                    <MessageSquare className="w-7 h-7" />
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <h2 className="text-base sm:text-lg font-display font-semibold text-surface-light-text dark:text-surface-dark-text">
-                Select a conversation
+
+              <h2 className="text-xl font-display font-bold text-surface-light-text dark:text-surface-dark-text tracking-tight">
+                Welcome to VOXA Workspace
               </h2>
-              <p className="text-xs text-surface-light-textMuted dark:text-surface-dark-textMuted max-w-sm mt-1 mb-5">
-                Choose a direct dialogue from the left column or start a new group discussion.
+              <p className="text-xs sm:text-sm text-surface-light-textMuted dark:text-surface-dark-textMuted max-w-sm mt-1.5 mb-6 leading-relaxed">
+                Connect seamlessly with colleagues in real time, or collaborate directly with your autonomous AI co-pilot.
               </p>
-              <div className="flex gap-2">
+
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={() => openAiChat()}
+                  className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-md flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-200" />
+                  <span>Ask VOXA AI</span>
+                </button>
                 <button
                   onClick={() => setIsNewChatOpen(true)}
-                  className="px-4 py-2 bg-brand-500 text-white rounded text-xs font-medium hover:bg-brand-600 transition-colors shadow-fine"
+                  className="px-4 py-2.5 bg-brand-500 text-white rounded-lg text-xs font-semibold hover:bg-brand-600 transition-all shadow-sm"
                 >
-                  Start Conversation
+                  Start Direct Chat
                 </button>
                 <button
                   onClick={() => setIsNewGroupOpen(true)}
-                  className="px-4 py-2 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border rounded text-xs font-medium hover:border-brand-500 transition-colors"
+                  className="px-4 py-2.5 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border text-surface-light-text dark:text-surface-dark-text rounded-lg text-xs font-medium hover:border-brand-500 transition-colors"
                 >
-                  Create Group
+                  Create Channel
                 </button>
               </div>
             </div>

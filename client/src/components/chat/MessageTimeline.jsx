@@ -13,16 +13,42 @@ import {
   Copy,
   Sparkles,
   Bot,
+  ThumbsUp,
+  ThumbsDown,
+  RotateCcw,
+  CheckCircle2,
+  Terminal,
+  Code2,
 } from 'lucide-react';
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 
 const QUICK_EMOJIS = ['👍', '❤️', '🔥', '⚡', '😂', '👏'];
 
 const AI_SUGGESTIONS = [
-  { label: '⚡ Explain WebSockets', prompt: 'Explain how WebSockets work and why they are ideal for real-time chat.' },
-  { label: '⚛ React useDebounce Hook', prompt: 'Write an efficient React custom hook for useDebounce with clear usage example.' },
-  { label: '🛡 How does 2FA work?', prompt: 'How does Two-Factor Authentication work in VOXA and how can I set it up?' },
-  { label: '📝 Draft Product Announcement', prompt: 'Draft a concise, modern announcement message for launching our real-time messaging workspace.' },
+  {
+    icon: Code2,
+    title: 'Custom React Hook',
+    desc: 'Write a useWebSocket hook with reconnection logic',
+    prompt: 'Write an efficient React custom hook named useWebSocket with automatic reconnection and typed event handling.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Explain Real-time Architecture',
+    desc: 'WebSockets vs Server-Sent Events comparison',
+    prompt: 'Explain how WebSockets differ from Server-Sent Events (SSE) and HTTP polling for real-time collaboration. Include pros and cons.',
+  },
+  {
+    icon: Terminal,
+    title: 'Draft Product Announcement',
+    desc: 'Concise release notes for team channel',
+    prompt: 'Draft an engaging, professional product launch announcement for VOXA AI real-time chat workspace.',
+  },
+  {
+    icon: Bot,
+    title: 'Security & 2FA Architecture',
+    desc: 'Best practices for TOTP & JWT authentication',
+    prompt: 'How does Two-Factor Authentication with TOTP work, and what are best practices for securing JWT refresh tokens?',
+  },
 ];
 
 // Rich Markdown and Code Block Renderer for Messages
@@ -53,7 +79,7 @@ const FormattedMessageContent = ({ content, isAi }) => {
     parts.push({ type: 'text', text: content.slice(lastIndex) });
   }
 
-  const handleCopy = (code, index) => {
+  const handleCopyCode = (code, index) => {
     navigator.clipboard.writeText(code);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
@@ -65,14 +91,15 @@ const FormattedMessageContent = ({ content, isAi }) => {
       // Header check
       if (line.startsWith('### ')) {
         return (
-          <h4 key={lineIdx} className="font-display font-bold text-sm text-surface-light-text dark:text-surface-dark-text mt-2.5 mb-1">
+          <h4 key={lineIdx} className="font-display font-bold text-sm text-surface-light-text dark:text-surface-dark-text mt-3 mb-1.5 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-sm bg-purple-400"></span>
             {line.replace('### ', '')}
           </h4>
         );
       }
       if (line.startsWith('## ')) {
         return (
-          <h3 key={lineIdx} className="font-display font-bold text-base text-surface-light-text dark:text-surface-dark-text mt-3 mb-1">
+          <h3 key={lineIdx} className="font-display font-bold text-base text-surface-light-text dark:text-surface-dark-text mt-3.5 mb-1.5 border-b border-surface-light-border/60 dark:border-surface-dark-border/60 pb-1">
             {line.replace('## ', '')}
           </h3>
         );
@@ -101,7 +128,7 @@ const FormattedMessageContent = ({ content, isAi }) => {
           );
         } else if (token.startsWith('`') && token.endsWith('`')) {
           renderedParts.push(
-            <code key={inlineMatch.index} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-black/10 dark:bg-black/30 text-purple-400 border border-purple-500/20">
+            <code key={inlineMatch.index} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-purple-500/10 dark:bg-purple-500/15 text-purple-400 border border-purple-500/20">
               {token.slice(1, -1)}
             </code>
           );
@@ -113,7 +140,7 @@ const FormattedMessageContent = ({ content, isAi }) => {
       }
 
       return (
-        <span key={lineIdx} className={`block ${isBullet ? 'pl-3.5 relative before:content-["•"] before:absolute before:left-0 before:text-brand-500' : ''}`}>
+        <span key={lineIdx} className={`block ${isBullet ? 'pl-4 relative before:content-["•"] before:absolute before:left-1 before:text-purple-400 font-normal my-0.5' : 'my-1'}`}>
           {renderedParts.length > 0 ? renderedParts : cleanLine}
         </span>
       );
@@ -127,20 +154,32 @@ const FormattedMessageContent = ({ content, isAi }) => {
           return (
             <div
               key={idx}
-              className="my-2 rounded-md overflow-hidden border border-purple-500/30 bg-[#0d0f14] dark:bg-[#0d0f14] text-[#e6edf3] font-mono text-[12px] shadow-sm"
+              className="my-3 rounded-lg overflow-hidden border border-purple-500/25 bg-[#0d1117] text-[#e6edf3] font-mono text-[12px] shadow-md"
             >
-              <div className="flex items-center justify-between px-3 py-1.5 bg-[#161b22] border-b border-purple-500/20 text-[10px] text-surface-dark-textMuted uppercase font-semibold">
-                <span className="text-purple-400">{p.lang || 'code'}</span>
+              <div className="flex items-center justify-between px-3.5 py-2 bg-[#161b22] border-b border-purple-500/20 text-[10px] text-zinc-400 uppercase font-semibold">
+                <span className="flex items-center gap-1.5 text-purple-400 lowercase font-mono">
+                  <Terminal className="w-3.5 h-3.5" />
+                  {p.lang || 'code'}
+                </span>
                 <button
                   type="button"
-                  onClick={() => handleCopy(p.code, idx)}
-                  className="flex items-center gap-1 hover:text-white transition-colors"
+                  onClick={() => handleCopyCode(p.code, idx)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 hover:text-white transition-colors"
                 >
-                  <Copy className="w-3 h-3" />
-                  <span>{copiedIndex === idx ? 'Copied!' : 'Copy'}</span>
+                  {copiedIndex === idx ? (
+                    <>
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
                 </button>
               </div>
-              <pre className="p-3 overflow-x-auto text-[11px] leading-relaxed scrollbar-thin">
+              <pre className="p-3.5 overflow-x-auto text-[11.5px] leading-relaxed scrollbar-thin">
                 <code>{p.code}</code>
               </pre>
             </div>
@@ -153,11 +192,20 @@ const FormattedMessageContent = ({ content, isAi }) => {
 };
 
 export const MessageTimeline = ({ searchQuery = '' }) => {
-  const { messages, isLoadingMessages, reactToMessage, setReplyingTo, activeConversation, sendMessage } = useChatStore();
+  const {
+    messages,
+    isLoadingMessages,
+    reactToMessage,
+    setReplyingTo,
+    activeConversation,
+    sendMessage,
+  } = useChatStore();
   const currentUser = useAuthStore((state) => state.user);
 
   const scrollRef = useRef(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [feedbackGiven, setFeedbackGiven] = useState({});
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -169,6 +217,30 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
     activeConversation &&
     !activeConversation.isGroup &&
     activeConversation.participants?.some((p) => p.isBot || p.username === 'voxa_ai');
+
+  const handleCopyMessage = (msgId, content) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMessageId(msgId);
+    setTimeout(() => setCopiedMessageId(null), 2000);
+  };
+
+  const handleFeedback = (msgId, type) => {
+    setFeedbackGiven((prev) => ({
+      ...prev,
+      [msgId]: prev[msgId] === type ? null : type,
+    }));
+  };
+
+  const handleRegenerate = (msg) => {
+    // Find previous user message
+    const msgIndex = messages.findIndex((m) => m._id === msg._id);
+    if (msgIndex > 0) {
+      const prevMsg = messages[msgIndex - 1];
+      if (prevMsg && prevMsg.content) {
+        sendMessage(`Regenerate response: ${prevMsg.content}`);
+      }
+    }
+  };
 
   const renderStatus = (msg) => {
     if (msg.sender?._id !== currentUser?._id) return null;
@@ -223,47 +295,65 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-surface-light-text dark:text-surface-dark-text bg-surface-light-bg dark:bg-surface-dark-bg"
+      className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-surface-light-text dark:text-surface-dark-text bg-surface-light-bg dark:bg-surface-dark-bg"
     >
-      {/* AI Bot Quick Suggestions Prompt Grid (when in AI chat and few messages) */}
-      {isAiChat && messages.length <= 2 && (
-        <div className="mb-4 p-4 rounded-lg border border-purple-500/25 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-cyan-500/10 shadow-sm animate-in fade-in">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span className="text-xs font-display font-semibold text-purple-400 uppercase tracking-wider">
-              VOXA AI Quick Prompts
-            </span>
+      {/* AI Hero State when in VOXA AI chat and few messages */}
+      {isAiChat && messages.length <= 1 && (
+        <div className="max-w-2xl mx-auto my-6 text-center animate-in fade-in duration-300">
+          <div className="relative inline-flex mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 p-[2px] shadow-lg shadow-purple-500/10">
+              <div className="w-full h-full rounded-2xl bg-[#0f1117] flex items-center justify-center text-purple-300">
+                <Bot className="w-8 h-8" />
+              </div>
+            </div>
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-surface-light-bg dark:ring-surface-dark-bg" />
           </div>
-          <p className="text-[11px] text-surface-light-textMuted dark:text-surface-dark-textMuted mb-3">
-            Click any suggestion below to start an interactive discussion with VOXA AI:
+
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-surface-light-text dark:text-surface-dark-text tracking-tight">
+            How can I help you today?
+          </h2>
+          <p className="text-xs sm:text-sm text-surface-light-textMuted dark:text-surface-dark-textMuted max-w-md mx-auto mt-1.5 mb-6">
+            I'm VOXA AI, your autonomous assistant for writing clean code, architecture guidance, and real-time collaboration.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {AI_SUGGESTIONS.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => sendMessage(item.prompt)}
-                className="text-left p-2.5 rounded-md border border-purple-500/20 bg-surface-light-panel dark:bg-surface-dark-panel hover:border-purple-500/50 hover:bg-purple-500/10 transition-all text-xs font-medium text-surface-light-text dark:text-surface-dark-text shadow-fine flex items-center justify-between group"
-              >
-                <span>{item.label}</span>
-                <span className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity text-[11px]">
-                  →
-                </span>
-              </button>
-            ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            {AI_SUGGESTIONS.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => sendMessage(item.prompt)}
+                  className="group p-3.5 rounded-xl border border-surface-light-border dark:border-purple-500/20 bg-surface-light-panel dark:bg-surface-dark-panel hover:border-purple-500/50 hover:bg-purple-500/5 transition-all text-left shadow-sm flex flex-col justify-between"
+                >
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="p-1.5 rounded-md bg-purple-500/10 text-purple-400 group-hover:scale-110 transition-transform">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-semibold text-surface-light-text dark:text-surface-dark-text group-hover:text-purple-400 transition-colors">
+                      {item.title}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-surface-light-textMuted dark:text-surface-dark-textMuted">
+                    {item.desc}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {messages.length === 0 ? (
+      {/* Empty State for regular chats */}
+      {!isAiChat && messages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
           <div className="w-12 h-12 rounded-full border border-dashed border-surface-light-border dark:border-surface-dark-border flex items-center justify-center text-surface-light-textSubtle dark:text-surface-dark-textSubtle mb-3">
             <Smile className="w-5 h-5 text-brand-500" />
           </div>
           <p className="text-xs font-display font-medium text-surface-light-text dark:text-surface-dark-text">
-            Start of conversation
+            No messages yet
           </p>
           <p className="text-[11px] text-surface-light-textMuted dark:text-surface-dark-textMuted max-w-xs mt-1">
-            Send a message, share a link or project note to begin.
+            Send a message, share code or an attachment to get the conversation started.
           </p>
         </div>
       ) : (
@@ -303,12 +393,13 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                 </div>
               )}
 
+              {/* Message Row */}
               <div
                 className={`flex flex-col group relative ${
                   isMine ? 'items-end' : 'items-start'
                 }`}
               >
-                {/* Sender Name for group chats or AI incoming */}
+                {/* Sender Header for group chats or AI incoming */}
                 {!isMine && isFirstInGroup && (
                   <div className="flex items-center gap-2 mb-1 px-1">
                     <span className="text-[11px] font-semibold font-display text-surface-light-text dark:text-surface-dark-text">
@@ -316,7 +407,7 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                     </span>
                     {isAiSender ? (
                       <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase font-bold tracking-wider">
-                        AI Bot
+                        ⚡ AI Copilot
                       </span>
                     ) : (
                       <span className="text-[10px] font-mono text-surface-light-textSubtle dark:text-surface-dark-textSubtle">
@@ -326,71 +417,85 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                   </div>
                 )}
 
-                {/* Message Body Container */}
-                <div className="relative flex items-start gap-2 max-w-[88%] sm:max-w-[75%]">
-                  {/* Floating Action Menu on Hover */}
-                  <div
-                    className={`absolute top-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border shadow-float rounded px-1.5 py-0.5 z-10 ${
-                      isMine ? 'right-0 -translate-x-2' : 'left-0 translate-x-2'
-                    }`}
-                  >
-                    <button
-                      onClick={() => setReplyingTo(msg)}
-                      className="p-1 hover:text-brand-500 text-surface-light-textSubtle dark:text-surface-dark-textSubtle"
-                      title="Reply"
+                {/* Message Container */}
+                <div
+                  className={`relative flex items-start gap-2 ${
+                    isAiSender
+                      ? 'w-full max-w-full sm:max-w-[92%]'
+                      : 'max-w-[88%] sm:max-w-[75%]'
+                  }`}
+                >
+                  {/* Floating Action Menu on Hover (for non-AI messages) */}
+                  {!isAiSender && (
+                    <div
+                      className={`absolute top-0 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border shadow-float rounded-md px-1.5 py-0.5 z-10 ${
+                        isMine ? 'right-0 -translate-x-2' : 'left-0 translate-x-2'
+                      }`}
                     >
-                      <Reply className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="relative">
                       <button
-                        onClick={() =>
-                          setActiveReactionMessageId(
-                            activeReactionMessageId === msg._id ? null : msg._id
-                          )
-                        }
-                        className="p-1 hover:text-brand-500 text-surface-light-textSubtle dark:text-surface-dark-textSubtle"
-                        title="React"
+                        onClick={() => setReplyingTo(msg)}
+                        className="p-1 hover:text-brand-500 text-surface-light-textSubtle dark:text-surface-dark-textSubtle transition-colors"
+                        title="Reply"
                       >
-                        <Smile className="w-3.5 h-3.5" />
+                        <Reply className="w-3.5 h-3.5" />
                       </button>
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setActiveReactionMessageId(
+                              activeReactionMessageId === msg._id ? null : msg._id
+                            )
+                          }
+                          className="p-1 hover:text-brand-500 text-surface-light-textSubtle dark:text-surface-dark-textSubtle transition-colors"
+                          title="React"
+                        >
+                          <Smile className="w-3.5 h-3.5" />
+                        </button>
 
-                      {/* Quick Emoji Picker Popover */}
-                      {activeReactionMessageId === msg._id && (
-                        <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border shadow-modal rounded p-1 flex items-center gap-1 z-20">
-                          {QUICK_EMOJIS.map((emoji) => (
-                            <button
-                              key={emoji}
-                              onClick={() => {
-                                reactToMessage(msg._id, emoji);
-                                setActiveReactionMessageId(null);
-                              }}
-                              className="text-sm p-1 hover:scale-125 transition-transform"
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                        {/* Quick Emoji Picker Popover */}
+                        {activeReactionMessageId === msg._id && (
+                          <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-surface-light-panel dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border shadow-modal rounded-md p-1 flex items-center gap-1 z-20">
+                            {QUICK_EMOJIS.map((emoji) => (
+                              <button
+                                key={emoji}
+                                onClick={() => {
+                                  reactToMessage(msg._id, emoji);
+                                  setActiveReactionMessageId(null);
+                                }}
+                                className="text-sm p-1 hover:scale-125 transition-transform"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Asymmetric Message Content */}
+                  {/* Asymmetric Message Card */}
                   <div
-                    className={`rounded-sm px-3.5 py-2 text-xs sm:text-[13px] leading-relaxed relative ${
+                    className={`rounded-xl px-4 py-3 text-xs sm:text-[13px] leading-relaxed relative ${
                       isMine
-                        ? 'bg-surface-light-subtle dark:bg-[#1E222B] text-surface-light-text dark:text-surface-dark-text border border-surface-light-border dark:border-surface-dark-border rounded-tr-none'
+                        ? 'bg-brand-500 text-white shadow-sm rounded-tr-none'
                         : isAiSender
-                        ? 'bg-gradient-to-br from-purple-500/5 to-cyan-500/5 dark:bg-[#151722] text-surface-light-text dark:text-surface-dark-text border border-purple-500/25 rounded-tl-none shadow-fine'
-                        : 'bg-surface-light-panel dark:bg-surface-dark-subtle text-surface-light-text dark:text-surface-dark-text border border-surface-light-border dark:border-surface-dark-border rounded-tl-none shadow-fine'
+                        ? 'w-full bg-surface-light-panel dark:bg-[#13161f] text-surface-light-text dark:text-surface-dark-text border border-purple-500/25 rounded-tl-none shadow-md'
+                        : 'bg-surface-light-panel dark:bg-surface-dark-subtle text-surface-light-text dark:text-surface-dark-text border border-surface-light-border dark:border-surface-dark-border rounded-tl-none shadow-sm'
                     }`}
                   >
                     {/* Quoted Reply Preview */}
                     {msg.replyTo && (
-                      <div className="mb-2 p-2 bg-black/5 dark:bg-black/20 border-l-2 border-brand-500 rounded text-[11px] text-surface-light-textMuted dark:text-surface-dark-textMuted">
-                        <span className="font-semibold text-surface-light-text dark:text-surface-dark-text block">
+                      <div
+                        className={`mb-2 p-2 rounded-md text-[11px] border-l-2 ${
+                          isMine
+                            ? 'bg-black/15 border-white/70 text-white/90'
+                            : 'bg-black/5 dark:bg-black/20 border-brand-500 text-surface-light-textMuted dark:text-surface-dark-textMuted'
+                        }`}
+                      >
+                        <span className="font-semibold block">
                           {msg.replyTo.sender?.name || 'User'}
                         </span>
-                        <span className="truncate block">{msg.replyTo.content}</span>
+                        <span className="truncate block opacity-90">{msg.replyTo.content}</span>
                       </div>
                     )}
 
@@ -398,13 +503,15 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                     {msg.attachments?.length > 0 && (
                       <div className="space-y-2 mb-2">
                         {msg.attachments.map((att, i) => {
-                          const isImg = att.mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(att.url);
+                          const isImg =
+                            att.mimeType?.startsWith('image/') ||
+                            /\.(jpg|jpeg|png|webp|gif)$/i.test(att.url);
                           return isImg ? (
                             <img
                               key={i}
                               src={att.url}
                               alt={att.name || 'Attachment'}
-                              className="max-h-60 rounded object-cover border border-surface-light-border dark:border-surface-dark-border cursor-pointer hover:opacity-95"
+                              className="max-h-60 rounded-lg object-cover border border-surface-light-border dark:border-surface-dark-border cursor-pointer hover:opacity-95"
                               onClick={() => window.open(att.url, '_blank')}
                             />
                           ) : (
@@ -413,7 +520,7 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                               href={att.url}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex items-center gap-2 p-2 rounded bg-surface-light-subtle dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border text-xs text-brand-500 hover:underline"
+                              className="flex items-center gap-2 p-2 rounded-lg bg-surface-light-subtle dark:bg-surface-dark-panel border border-surface-light-border dark:border-surface-dark-border text-xs text-brand-500 hover:underline"
                             >
                               <FileText className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">{att.name || 'Download file'}</span>
@@ -426,7 +533,7 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
 
                     {/* Text Message Content */}
                     {msg.isDeleted ? (
-                      <span className="italic text-surface-light-textSubtle dark:text-surface-dark-textSubtle">
+                      <span className="italic opacity-60">
                         This message was deleted
                       </span>
                     ) : isAiSender ? (
@@ -435,11 +542,83 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                     )}
 
-                    {/* Timestamp and Delivery/Read State */}
-                    <div className="mt-1 flex items-center justify-end gap-1 text-[10px] font-mono text-surface-light-textSubtle dark:text-surface-dark-textSubtle select-none">
-                      <span>{format(new Date(msg.createdAt), 'HH:mm')}</span>
-                      {renderStatus(msg)}
-                    </div>
+                    {/* AI Response Action Toolbar (Copy, Thumbs, Regenerate) */}
+                    {isAiSender && (
+                      <div className="mt-3 pt-2.5 border-t border-purple-500/15 flex items-center justify-between text-[11px] text-surface-light-textSubtle dark:text-surface-dark-textSubtle">
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg._id, msg.content)}
+                            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-purple-500/10 hover:text-purple-400 transition-colors"
+                            title="Copy response"
+                          >
+                            {copiedMessageId === msg._id ? (
+                              <>
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleFeedback(msg._id, 'up')}
+                            className={`p-1 rounded transition-colors ${
+                              feedbackGiven[msg._id] === 'up'
+                                ? 'text-emerald-400 bg-emerald-500/10'
+                                : 'hover:bg-purple-500/10 hover:text-purple-400'
+                            }`}
+                            title="Helpful"
+                          >
+                            <ThumbsUp className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleFeedback(msg._id, 'down')}
+                            className={`p-1 rounded transition-colors ${
+                              feedbackGiven[msg._id] === 'down'
+                                ? 'text-rose-400 bg-rose-500/10'
+                                : 'hover:bg-purple-500/10 hover:text-purple-400'
+                            }`}
+                            title="Not helpful"
+                          >
+                            <ThumbsDown className="w-3 h-3" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRegenerate(msg)}
+                            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-purple-500/10 hover:text-purple-400 transition-colors"
+                            title="Regenerate response"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Regenerate</span>
+                          </button>
+                        </div>
+
+                        <span className="text-[10px] font-mono text-purple-400/80">
+                          {format(new Date(msg.createdAt), 'HH:mm')}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Standard User Message Timestamp and Status */}
+                    {!isAiSender && (
+                      <div
+                        className={`mt-1 flex items-center justify-end gap-1 text-[10px] font-mono select-none ${
+                          isMine ? 'text-white/80' : 'text-surface-light-textSubtle dark:text-surface-dark-textSubtle'
+                        }`}
+                      >
+                        <span>{format(new Date(msg.createdAt), 'HH:mm')}</span>
+                        {renderStatus(msg)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -450,7 +629,6 @@ export const MessageTimeline = ({ searchQuery = '' }) => {
                       isMine ? 'justify-end' : 'justify-start'
                     }`}
                   >
-                    {/* Group identical emojis */}
                     {Object.entries(
                       msg.reactions.reduce((acc, r) => {
                         acc[r.emoji] = (acc[r.emoji] || 0) + 1;
